@@ -1,0 +1,8 @@
+flask
+flask-wtf
+flask-debugtoolbar
+flask-sqlalchemy
+
+flask-bcrypt
+requests
+psycopg2
