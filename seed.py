@@ -1,6 +1,6 @@
 """Initial data."""
 
-from models import City, Cafe, User, db, connect_db
+from models import City, Cafe, db, connect_db
 from flask import Flask
 
 app = Flask(__name__)

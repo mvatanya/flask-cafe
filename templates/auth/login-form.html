@@ -9,7 +9,13 @@
 
     <h1 class="mb-4">Welcome Back!</h1>
 
-    <!-- form goes here -->
+
+    <form method="POST">
+      {% include '_form.html' %}
+
+      <button type="submit" class="btn btn-primary">Add</button>
+      <a class="d-inline-block btn btn-primary" href="/cafes">Cancel</a>
+    </form>
 
   </div>
 </div>

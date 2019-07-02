@@ -6,6 +6,14 @@
 
 <h1 class="mb-4">Add Cafe</h1>
 
+
+
+<form method="POST">
+    {% include '_form.html' %}
+
+    <button type="submit" class="btn btn-primary">Add</button>
+    <a class="d-inline-block btn btn-primary" href="/cafes">Cancel</a>
+</form>
 <!-- form goes here -->
 
 {% endblock %}
