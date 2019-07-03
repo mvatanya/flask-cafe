@@ -31,3 +31,12 @@ class LoginForm(FlaskForm):
 
     username = StringField("Username:", validators=[InputRequired()])
     password = StringField("Password", validators=[InputRequired()])
+
+class ProfileEditForm(FlaskForm):
+    """Form for editting user details."""
+    first_name = StringField("First Name:", validators=[InputRequired()])
+    last_name = StringField("Last Name:", validators=[InputRequired()])
+    description = TextAreaField("Description:")
+    email = EmailField('Email address', validators=[InputRequired(), Email()])
+    image_url = URLField("Image url:", validators=[Optional()])
+

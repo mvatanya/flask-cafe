@@ -134,8 +134,23 @@ class User(db.Model):
         db.Text,
         nullable=False)
 
+    def get_full_name(self):
+        """ Get full name of user """
+
+        return f'{self.first_name} {self.last_name}'
+
+
     @classmethod
-    def register(cls, username, first_name, last_name, description, email, password, image_url):
+    def register(
+            cls,
+            username,
+            first_name,
+            last_name,
+            description,
+            email,
+            password,
+            image_url="/static/images/default-pic.png",
+            admin=False):
         """Register user w/hashed password & return user."""
 
         hashed = bcrypt.generate_password_hash(password)
@@ -143,7 +158,15 @@ class User(db.Model):
         hashed_utf8 = hashed.decode("utf8")
 
         # return instance of user w/username and hashed password
-        return cls(username=username, email=email, first_name=first_name, last_name=last_name, description=description, image_url=image_url, hashed_password=hashed_utf8)
+        return cls(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            description=description,
+            image_url=image_url,
+            hashed_password=hashed_utf8,
+            admin=admin)
 
     @classmethod
     def authenticate(cls, username, pwd):

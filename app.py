@@ -6,7 +6,7 @@ from flask import redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, Cafe, City, User
-from forms import CafeForm, SignupForm, LoginForm
+from forms import CafeForm, SignupForm, LoginForm, ProfileEditForm
 
 from sqlalchemy.exc import IntegrityError
 
@@ -36,7 +36,6 @@ NOT_LOGGED_IN_MSG = "You are not logged in."
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
-
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
 
@@ -46,7 +45,7 @@ def add_user_to_g():
 
 def do_login(user):
     """Log in user."""
-
+    # print("do_login app.py")
     session[CURR_USER_KEY] = user.id
 
 
@@ -79,14 +78,25 @@ def register_account():
             description,
             email,
             password,
-            image_url
+            image_url or None
             )
 
         db.session.add(new_user)
-        db.session.commit()
 
-        flash("You are signed up and log in")
-        return redirect(f'/cafes')
+        # put this in a try/ except IntegrityError
+        # render the form again with an error message of "username already taken"
+        try:
+            
+            db.session.commit()
+            do_login(new_user)
+
+            flash("You are signed up and logged in.")
+            return redirect(f'/cafes')
+
+        except IntegrityError:
+            flash("Username already taken.")
+            render_template('auth/signup-form.html', form=form)
+
 
     return render_template(
         'auth/signup-form.html', form=form
@@ -104,18 +114,25 @@ def login():
         password = form.password.data
 
         user = User.authenticate(username, password)
-        
+
         if user:
             do_login(user)
-            flash(f'hello {username}')
+            flash(f'Hello, {username}')
             return redirect(f'/cafes')
 
         else:
-            form.username.errors = ["Bad name/password"]
-    
+            form.username.errors = ["Invalid credentials"]
+
     return render_template('auth/login-form.html', form=form)
 
-    
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    """Logs user out and redirects to homepage."""
+
+    do_logout()
+    flash('successfully logged out')
+    return redirect("/")
 
 
 #######################################
@@ -156,7 +173,7 @@ def cafe_detail(cafe_id):
 
 @app.route('/cafes/add', methods=["GET", "POST"])
 def add_cafe_form():
-    """Show form for adding a new cafe."""
+    """Show and process form for adding a new cafe. """
 
     form = CafeForm()
     cities = [(city.code, city.name) for city in City.query.all()]
@@ -176,7 +193,7 @@ def add_cafe_form():
             url=url,
             address=address,
             city_code=city_code,
-            image_url=image_url
+            image_url=image_url or None
         )
 
         db.session.add(cafe)
@@ -189,8 +206,9 @@ def add_cafe_form():
         'cafe/add-form.html', form=form
     )
 
-@app.route('/cafes/<int:cafe_id>/edit',methods=["GET", "POST"])
+@app.route('/cafes/<int:cafe_id>/edit', methods=["GET", "POST"])
 def edit_cafe_form(cafe_id):
+    """ Show and process form for editting cafe."""
 
     cafe = Cafe.query.get_or_404(cafe_id)
     form = CafeForm(obj=cafe)
@@ -204,14 +222,50 @@ def edit_cafe_form(cafe_id):
         cafe.address = form.address.data
         cafe.city_code = form.city_code.data
         cafe.image_url = form.image_url.data
-    
-        # db.session.add(cafe)
+
         db.session.commit()
 
         flash(f'{cafe.name} edited.')
         return redirect(f'/cafes/{cafe.id}')
 
     return render_template(
-        'cafe/edit-form.html', form=form
+        'cafe/edit-form.html', form=form, cafe=cafe
     )
 
+#######################################
+# User Data
+
+
+@app.route('/profile')
+def user_profile():
+    """ If user logged in, show profile page. Otherwise, send to login."""
+    if CURR_USER_KEY in session:
+        return render_template('/profile/detail.html')
+    else:
+        return redirect('/login')
+
+
+@app.route('/profile/edit', methods=["GET", "POST"])
+def edit_user():
+    """If user logged in, show and process form for editing user information.
+    Otherwise, send to login page.
+    """
+    if CURR_USER_KEY in session:
+        user = g.user
+        form = ProfileEditForm(obj=user)
+
+        if form.validate_on_submit():
+            user.first_name = form.first_name.data
+            user.last_name = form.last_name.data
+            user.description = form.description.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or "/static/images/default-pic.png"
+
+            db.session.commit()
+
+            flash("Profile edited.")
+            return redirect("/profile")
+
+        return render_template('/profile/edit-form.html', form=form)
+    else:
+        return redirect('/login')
