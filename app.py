@@ -2,10 +2,10 @@
 
 
 from flask import Flask, render_template, request, flash
-from flask import redirect, session, g
+from flask import redirect, session, g, jsonify, Response
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, Cafe, City, User
+from models import db, connect_db, Cafe, City, User, Like
 from forms import CafeForm, SignupForm, LoginForm, ProfileEditForm
 
 from sqlalchemy.exc import IntegrityError
@@ -165,10 +165,12 @@ def cafe_detail(cafe_id):
     """Show detail for cafe."""
 
     cafe = Cafe.query.get_or_404(cafe_id)
+    user = g.user
 
     return render_template(
         'cafe/detail.html',
         cafe=cafe,
+        user=user
     )
 
 @app.route('/cafes/add', methods=["GET", "POST"])
@@ -176,6 +178,8 @@ def add_cafe_form():
     """Show and process form for adding a new cafe. """
 
     form = CafeForm()
+
+    # make cities dinamic
     cities = [(city.code, city.name) for city in City.query.all()]
     form.city_code.choices = cities
 
@@ -210,27 +214,36 @@ def add_cafe_form():
 def edit_cafe_form(cafe_id):
     """ Show and process form for editting cafe."""
 
-    cafe = Cafe.query.get_or_404(cafe_id)
-    form = CafeForm(obj=cafe)
-    cities = [(city.code, city.name) for city in City.query.all()]
-    form.city_code.choices = cities
+    if CURR_USER_KEY in session:
+        user = g.user
+        if (user.admin):
+            cafe = Cafe.query.get_or_404(cafe_id)
+            form = CafeForm(obj=cafe)
+            cities = [(city.code, city.name) for city in City.query.all()]
+            form.city_code.choices = cities
 
-    if form.validate_on_submit():
-        cafe.name = form.name.data
-        cafe.description = form.description.data
-        cafe.url = form.url.data
-        cafe.address = form.address.data
-        cafe.city_code = form.city_code.data
-        cafe.image_url = form.image_url.data
+            if form.validate_on_submit():
+                cafe.name = form.name.data
+                cafe.description = form.description.data
+                cafe.url = form.url.data
+                cafe.address = form.address.data
+                cafe.city_code = form.city_code.data
+                cafe.image_url = form.image_url.data
 
-        db.session.commit()
+                db.session.commit()
 
-        flash(f'{cafe.name} edited.')
-        return redirect(f'/cafes/{cafe.id}')
+                flash(f'{cafe.name} edited.')
+                return redirect(f'/cafes/{cafe.id}')
 
-    return render_template(
-        'cafe/edit-form.html', form=form, cafe=cafe
-    )
+            return render_template(
+                'cafe/edit-form.html', form=form, cafe=cafe
+            )
+        else:
+            return Response(
+                'Could not verify your access level for that URL.\n'
+                'You have to login with proper credentials', 401)
+    else:
+        return redirect('/login')
 
 #######################################
 # User Data
@@ -269,3 +282,55 @@ def edit_user():
         return render_template('/profile/edit-form.html', form=form)
     else:
         return redirect('/login')
+
+#######################################
+# Like cafe
+
+@app.route('/api/likes')
+def like_cafes():
+    """If user log in, return if user like the cafe or not"""
+    if CURR_USER_KEY in session:
+        cafe_id = request.args.get("cafe_id")
+        user = g.user
+        print(user.id)
+        print(user.likes)
+        for like in user.likes:
+            if like.cafe_id == int(cafe_id or 0):
+                print("get True")
+                return jsonify({"likes": True})
+
+        return jsonify({"likes": False})
+
+    return jsonify({"error": "Not logged in"})
+
+@app.route('/api/like', methods=["POST"])
+def like():
+    """if the user log in, make the user like the cafe"""
+    if CURR_USER_KEY in session:
+        cafe_id = int(request.json["cafe_id"])
+        print(type(cafe_id))
+        user_id = g.user.id
+        print(type(user_id))
+        like = Like(
+            cafe_id=cafe_id,
+            user_id=user_id
+        )
+        print(like)
+        db.session.add(like)
+        print("====================================")
+        print(like)
+        db.session.commit()
+        return jsonify({"liked": cafe_id})
+    return jsonify({"error": "Not logged in"})
+
+@app.route('/api/unlike', methods=["POST"])
+def unlike():
+    """if the user log in, make the user unlike the cafe"""
+    if CURR_USER_KEY in session:
+        cafe_id = int(request.json["cafe_id"])
+        user_id = g.user.id
+        Like.query.filter_by(cafe_id=cafe_id, user_id=user_id).delete()
+        db.session.commit()
+
+        return jsonify({"unliked": cafe_id})
+    return jsonify({"error": "Not logged in"})

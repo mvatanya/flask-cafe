@@ -74,24 +74,17 @@ class Cafe(db.Model):
 
     city = db.relationship("City", backref='cafes')
 
+    likes = db.relationship('Like')
+    liking_users = db.relationship('User', secondary='likes', backref="liked_cafes")
+
     def __repr__(self):
-        return f'<Cafe id={self.id} name="{self.name}">'
+        return f'<Cafe id={self.id}, name="{self.name}">'
 
     def get_city_state(self):
         """Return 'city, state' for cafe."""
 
         city = self.city
         return f'{city.name}, {city.state}'
-
-
-def connect_db(app):
-    """Connect this database to provided Flask app.
-
-    You should call this in your Flask app.
-    """
-
-    db.app = app
-    db.init_app(app)
 
 
 class User(db.Model):
@@ -107,11 +100,6 @@ class User(db.Model):
         db.Text,
         nullable=False,
         unique=True)
-
-    admin = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=False)
 
     email = db.Column(db.Text)
 
@@ -134,10 +122,22 @@ class User(db.Model):
         db.Text,
         nullable=False)
 
+    admin = db.Column(
+        db.Boolean,
+        default=False)
+
+    likes = db.relationship('Like') 
+    
+
     def get_full_name(self):
         """ Get full name of user """
 
         return f'{self.first_name} {self.last_name}'
+    
+    def __repr__(self):
+        u = self
+        return f"<User: {u.id}, {u.username}, {u.admin}, {u.email}, {u.first_name}, {u.last_name}>"
+
 
 
     @classmethod
@@ -151,6 +151,7 @@ class User(db.Model):
             password,
             image_url="/static/images/default-pic.png",
             admin=False):
+
         """Register user w/hashed password & return user."""
 
         hashed = bcrypt.generate_password_hash(password)
@@ -182,3 +183,38 @@ class User(db.Model):
             return u
         else:
             return False
+
+
+class Like(db.Model):
+    """Mapping of a cafe to a user"""
+
+    __tablename__ = "likes"
+
+    cafe_id = db.Column(
+                db.Integer,
+                db.ForeignKey("cafes.id"),
+                primary_key=True)
+
+    user_id = db.Column(
+                db.Integer,
+                db.ForeignKey("users.id"),
+                primary_key=True)
+
+    def __repr__(self):
+        like = self
+        return f"<Like: {like.cafe_id}, {like.user_id}>"
+
+def connect_db(app):
+    """Connect this database to provided Flask app.
+
+    You should call this in your Flask app.
+    """
+
+    db.app = app
+    db.init_app(app)
+
+
+
+
+
+

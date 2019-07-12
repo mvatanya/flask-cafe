@@ -510,7 +510,40 @@ class ProfileViewsTestCase(TestCase):
 # likes
 
 
-# class LikeViewsTestCase(TestCase):
-#     """Tests for views on cafes."""
+class LikeViewsTestCase(TestCase):
+    """Tests for views on cafes."""
 
-#     # FIXME: add setup/teardown/inidividual tests
+    # def setUp(self):
+    #     """Before each test, add sample user."""
+        
+    #     User.query.delete()
+    #     City.query.delete()
+    #     Cafe.query.delete()
+
+    #     sf = City(**CITY_DATA)
+    #     db.session.add(sf)
+
+    #     cafe = Cafe(**CAFE_DATA)
+    #     db.session.add(cafe)
+
+    #     user = User.register(**TEST_USER_DATA)
+    #     db.session.add(user)
+    #     db.session.commit()
+
+    #     self.user = user
+    #     self.user_id = user.id
+
+    #     db.session.commit()
+
+    # def tearDown(self):
+    #     """After each test, remove all users."""
+
+    #     User.query.delete()
+    #     db.session.commit()
+    
+    # def test_liked_cafe(self):
+    #     with app.test_client() as client:
+    #         #like a cafe
+    #         user.liked_cafes.append(cafe)
+    #         db.session.commit()
+

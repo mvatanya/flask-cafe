@@ -17,6 +17,18 @@
 
     <p><b>Username:</b> {{g.user.username}} </p>
     <p><b>Email:</b> {{g.user.email}} </p>
+    
+    <p></p>
+    <p>Your Liked Cafes:</p>
+    <ul>
+      {% for cafe in g.user.liked_cafes %}
+        {% if cafe %}
+          <li> {{cafe.name}}</li>
+        {% endif %}
+        {% else %}
+          <p>You have no liked cafes</p>
+      {% endfor %}
+    </ul>
 
     <p>
       <a class="btn btn-outline-primary" href="/profile/edit">

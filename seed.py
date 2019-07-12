@@ -1,6 +1,6 @@
 """Initial data."""
 
-from models import City, Cafe, db, connect_db
+from models import City, Cafe, db, connect_db, User, Like
 from flask import Flask
 
 app = Flask(__name__)
@@ -53,40 +53,40 @@ db.session.add_all([c1, c2])
 db.session.commit()
 
 
-#######################################
+######################################
 # add users
 
-# ua = User.register(
-#     username="admin",
-#     first_name="Addie",
-#     last_name="MacAdmin",
-#     description="I am the very model of the modern model administrator.",
-#     email="admin@test.com",
-#     password="secret",
-#     admin=True,
-# )
+ua = User.register(
+    username="admin",
+    first_name="Addie",
+    last_name="MacAdmin",
+    description="I am the very model of the modern model administrator.",
+    email="admin@test.com",
+    password="secret",
+    admin=True,
+)
 
-# u1 = User.register(
-#     username="test",
-#     first_name="Testy",
-#     last_name="MacTest",
-#     description="I am the ultimate representative user.",
-#     email="test@test.com",
-#     password="secret",
-# )
+u1 = User.register(
+    username="test",
+    first_name="Testy",
+    last_name="MacTest",
+    description="I am the ultimate representative user.",
+    email="test@test.com",
+    password="secret",
+)
 
-# db.session.add_all([u1])
-# db.session.commit()
+db.session.add_all([u1])
+db.session.commit()
 
 
-#######################################
+######################################
 # add likes
 
-# u1.liked_cafes.append(c1)
-# u1.liked_cafes.append(c2)
-# ua.liked_cafes.append(c1)
+u1.liked_cafes.append(c1)
+u1.liked_cafes.append(c2)
+ua.liked_cafes.append(c1)
 
-# db.session.commit()
+db.session.commit()
 
 
 #######################################
