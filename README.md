@@ -1,6 +1,6 @@
 # flask-cafe
 
-This is a Flask for managing cafes and users.
+This is a Flask app for managing cafes and users.
 
 Starter code is provided by Rithm School. 
 
